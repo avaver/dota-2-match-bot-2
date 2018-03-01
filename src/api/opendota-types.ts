@@ -1,4 +1,4 @@
-export interface MatchJson {
+export interface Match {
   match_id: number;
   barracks_status_dire: number;
   barracks_status_radiant: number;
@@ -64,10 +64,10 @@ export interface MatchJson {
   throw: number;
   loss: number;
   replay_url: string;
-  players: PlayerJson[];
+  players: MatchPlayer[];
 }
 
-export interface PlayerJson {
+export interface MatchPlayer {
   firstblood_claimed: number;
   match_id: number;
   player_slot: number;
@@ -238,7 +238,7 @@ export interface PlayerJson {
   ];
 }
 
-export interface PlayerProfileJson {
+export interface Player {
   tracked_until: string;
   solo_competitive_rank: string;
   competitive_rank: string;
@@ -249,10 +249,10 @@ export interface PlayerProfileJson {
       stdDev: number;
       n: number
   };
-  profile: ProfileJson;
+  profile: Profile;
 }
 
-export interface ProfileJson {
+export interface Profile {
   account_id: number;
   personaname: string;
   name: string;
@@ -266,7 +266,7 @@ export interface ProfileJson {
   loccountrycode: string;
 }
 
-export interface RecentMatchJson {
+export interface RecentMatch {
   match_id: number;
   player_slot: number;
   radiant_win: boolean;
