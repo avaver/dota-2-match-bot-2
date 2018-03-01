@@ -45,7 +45,9 @@ function requestMatchData(): Observable<MatchData> {
   
   let result = Observable.zip(gamers, matches, (g, m) => new MatchData(g, m));
 
-  result.groupBy(md => md.matchId, md => md.playerId).subscribe(console.log);
+  result.groupBy(md => md.matchId, md => md.playerId)
+    .flatMap(group => group.reduce((acc, cur) => {}))
+    .subscribe(console.log);
 
   return result;
 }
