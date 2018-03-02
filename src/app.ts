@@ -45,14 +45,24 @@ function requestMatchData(): Observable<MatchData> {
   
   let result = Observable.zip(gamers, matches, (g, m) => new MatchData(g, m));
 
-  result.groupBy(md => md.matchId, md => md.playerId)
-    .flatMap(group => group.reduce((acc, cur) => {}))
-    .subscribe(console.log);
-
+  let result2 = result.groupBy(md => md.matchId, md => md.playerId)
+    .flatMap(group => group.reduce((acc, cur) => [...acc, cur], [group.key]))
+    .map(arr => new GroupedMatchData(arr[0], arr.slice(1)));
+  result2.subscribe(console.log);
   return result;
 }
 
-(async () => {
-  let x = scheduler.flatMap(requestMatchData);
-  x.take(3).subscribe(m => console.log(m));
-})();
+function getMatch2(id: number): Observable<MatchData> {
+  let promise = new Promise<MatchData>(resolve => resolve(new MatchData(id, 100 + id % 2)));
+  return Observable.fromPromise(limiter.schedule(() => promise));
+}
+
+function requestMatchData2(): Observable<GroupedMatchData> {
+  return Observable.from(accounts.map(account => getMatch2(account)))
+    .mergeAll()
+    .groupBy(match => match.matchId, match => match.playerId)
+    .flatMap(group => group.reduce((accumulator, current) => [...accumulator, current], [group.key]))
+    .map(array => new GroupedMatchData(array[0], array.slice(1)));
+} 
+
+scheduler.take(1).flatMap(requestMatchData2).subscribe(console.log);
