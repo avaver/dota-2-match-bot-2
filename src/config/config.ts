@@ -1,2 +1,0 @@
-export const DISCORD_WEBHOOK_URL = "https://discordapp.com/api/webhooks/419275690215735297/ItQ-QZSKs5IQ67N9VXeRsxfmPm79y04SOm5MKADTmDuG6jEPxTfs633tyTH4cWFKexAu";
-//"https://discordapp.com/api/webhooks/409290117245698063/tX_YnYIwN7FYIaz8G-wRIc3R1Ya-ZQtuPhsi9AZ9c3Po-010reRclI4xII80rdN4SfGj";
