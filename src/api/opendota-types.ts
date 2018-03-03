@@ -77,6 +77,7 @@ export interface MatchPlayer {
   ability_uses: {};
   ability_targets: {};
   account_id: number;
+  avatar?: string;
   actions: {};
   additional_units: {};
   assists: number;

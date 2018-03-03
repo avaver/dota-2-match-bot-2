@@ -10,7 +10,11 @@ class CacheItem<T> {
 
 export default class PlayerProfileService {
   static CACHE_EXPIRATION_PERIOD_MS = 60 * 1000;
-  private profileCache = new Map<number, CacheItem<Profile>>();
+  private profileCache: Map<number, CacheItem<Profile>>;
+
+  constructor() {
+    this.profileCache = new Map<number, CacheItem<Profile>>();
+  }
 
   public getProfile(accountId: number): Observable<Profile> {
     let cachedProfile = this.profileCache.get(accountId);
