@@ -8,22 +8,24 @@ import { format } from 'util';
 import PlayerProfileService from './services/player-profile-service';
 import { Observable } from 'rxjs';
 
-const accounts = [298134653, 333303976, 118975931, 86848474, 314684987, 36753317];
-
-const monitorService = new MatchMonitorService(accounts);
 const messageService = new DiscordMessageService();
 const profileService = new PlayerProfileService();
 
+const accounts = [298134653, 333303976, 118975931, 86848474, 314684987, 36753317];
 const avatars = new Map<number, string>();
-Observable.from(accounts.map(account => profileService.getProfile(account))).mergeAll().subscribe(profile => { avatars.set(profile.account_id, profile.avatar); console.log(profile.personaname);});
-let matchSubscribtion = monitorService.getMatchStream(10000)
-.map(match => messageService.getMatchSummaryMessage(setAvatar(match)))
-.subscribe(DiscordWebhook.post, console.log);
+
+const monitorService = new MatchMonitorService(accounts);
+
+Observable.from(accounts.map(account => profileService.getProfile(account))).mergeAll() // get profiles
+  .subscribe(profile => avatars.set(profile.account_id, profile.avatar)); // and save them in local map
+
+let matchSubscribtion = monitorService.getMatchStream(10000) // get match stream
+.map(match => messageService.getMatchSummaryMessage(setAvatar(match))) // generate discord message for each incoming match
+.subscribe(DiscordWebhook.post, error => console.log(error.message)); // and finally post it
 
 setTimeout(() => matchSubscribtion.unsubscribe(), 60000);
 
 function setAvatar(match: Match): Match {
-  console.log('asdasd');
   match.players.forEach(p => p.avatar = avatars.get(p.account_id));
   return match;
 }
