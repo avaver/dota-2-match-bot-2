@@ -26,6 +26,7 @@ let matchSubscribtion = monitorService.getMatchStream(10000) // get match stream
 setTimeout(() => matchSubscribtion.unsubscribe(), 60000);
 
 function setAvatar(match: Match): Match {
-  match.players.forEach(p => p.avatar = avatars.get(p.account_id));
+  console.log('processing match %s', match.match_id);
+  match.players.forEach(p => { p.avatar = avatars.get(p.account_id); console.log('avatar set for %s', p.personaname); });
   return match;
 }
