@@ -29,6 +29,7 @@ export default class OpenDota {
   }
 
   private static request<T>(url: string) : Observable<T> {
+    console.log('api call %s', url);
     return Observable.fromPromise(limiter.schedule(() => Axios.get<T>(url))).map(response => response.data);
   }
 }
