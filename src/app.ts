@@ -5,28 +5,26 @@ import DiscordMessageService from './services/discord-message-service';
 import DiscordWebhook from './api/discord-webhook';
 import { Match, MatchPlayer, HEROES, Hero } from './api/opendota-types';
 import { format } from 'util';
-import PlayerProfileService from './services/player-profile-service';
+import AccountService from './services/accounts-service';
 import { Observable } from 'rxjs';
+import Firebase from './api/firebase';
+import OpenDota from './api/opendota';
 
+const accountService = new AccountService();
+const monitorService = new MatchMonitorService();
+
+monitorService.getMatchStream(accountService.accounts, 5000).subscribe(m => console.log(m.match_id));
+
+/*
 const messageService = new DiscordMessageService();
-const profileService = new PlayerProfileService();
+const accountService = new AccountService();
+const monitorService = new MatchMonitorService();
 
-const accounts = [298134653, 333303976, 118975931, 86848474, 314684987, 36753317];
-const avatars = new Map<number, string>();
+monitorService.getMatchStream(accountService.accounts, 10000).subscribe(match => console.log(match.match_id));
 
-const monitorService = new MatchMonitorService(accounts);
-
-Observable.from(accounts.map(account => profileService.getProfile(account))).mergeAll() // get profiles
-  .subscribe(profile => avatars.set(profile.account_id, profile.avatar)); // and save them in local map
-
-let matchSubscribtion = monitorService.getMatchStream(10000) // get match stream
-.map(match => messageService.getMatchSummaryMessage(setAvatar(match))) // generate discord message for each incoming match
+let matchSubscribtion = monitorService.getMatchStream(accountService.accounts, 10000) // get match stream
+.map(match => messageService.getMatchSummaryMessage(match)) // generate discord message for each incoming match
 .subscribe(DiscordWebhook.post, error => console.log(error.message)); // and finally post it
 
 setTimeout(() => matchSubscribtion.unsubscribe(), 60000);
-
-function setAvatar(match: Match): Match {
-  console.log('processing match %s', match.match_id);
-  match.players.forEach(p => { p.avatar = avatars.get(p.account_id); console.log('avatar set for %s', p.personaname); });
-  return match;
-}
+*/
