@@ -14,11 +14,13 @@ export default class MatchMonitorService {
       .switchMap(accs => accs.map(a => OpenDota.getLastMatchForPlayer(a.account_id))).mergeAll().distinct(m => m.match_id)
       .flatMap(m => OpenDota.getMatchDetails(m.match_id))
       .withLatestFrom(this.accountService.accounts)
-      .map(val => this.filterOutMatchPlayers(val[0], val[1]));
+      .map(val => this.transformMatch(val[0], val[1]));
   }
 
-  private filterOutMatchPlayers(match: Match, profiles: Profile[]): Match {
+  private transformMatch(match: Match, profiles: Profile[]): Match {
+    // remove other players
     match.players = match.players.filter(pl => profiles.map(pr => pr.account_id).indexOf(pl.account_id) >= 0);
+    // add avatar url
     match.players.forEach(pl => pl.avatar = (profiles.find(pr => pr.account_id == pl.account_id) as Profile).avatarfull);
     return match;
   }
