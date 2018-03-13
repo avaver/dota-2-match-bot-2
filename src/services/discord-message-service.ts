@@ -1,7 +1,7 @@
 'use strict';
 
-import { Message, Embed, Author, Thumbnail, Field, Footer } from '../api/discord-types';
-import { Match, MatchPlayer, HEROES, Hero } from '../api/opendota-types';
+import { Message, Embed, Author, Thumbnail, Field, Footer } from '../model/discord-types';
+import { Match, MatchPlayer, HEROES, Hero } from '../model/opendota-types';
 import { format } from 'util';
 
 export default class DiscordMessageService {

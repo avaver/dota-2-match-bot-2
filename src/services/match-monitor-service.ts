@@ -1,22 +1,25 @@
 'use strict';
 
 import OpenDota from '../api/opendota';
-import { Match } from '../api/opendota-types';
-import { Observable } from 'rxjs';
-import { Account } from './accounts-service';
+import { Match, Profile } from '../model/opendota-types';
+import { Observable, Subject } from 'rxjs';
+import AccountService from './accounts-service';
 
 export default class MatchMonitorService {
-  public getMatchStream(accounts: Account[], pollInterval: number): Observable<Match> {
-    let stream = Observable.interval(pollInterval)
-    .flatMap(() => accounts.map(account => OpenDota.getLastMatchForPlayer(account.id)))
-    .mergeAll()
-    .distinct(m => m.match_id)
-    .flatMap(m => OpenDota.getMatchDetails(m.match_id))
-    .map(m => {
-      m.players = m.players.filter(p => accounts.find(a => a.id == p.account_id));
-      return m;
-    });
+  private accountService = new AccountService();
 
-    return stream;
+  public getMatchStream(): Observable<Match> {
+    return Observable.interval(5000)
+      .withLatestFrom(this.accountService.accounts).map(val => val[1])
+      .switchMap(accs => accs.map(a => OpenDota.getLastMatchForPlayer(a.account_id))).mergeAll().distinct(m => m.match_id)
+      .flatMap(m => OpenDota.getMatchDetails(m.match_id))
+      .withLatestFrom(this.accountService.accounts)
+      .map(val => this.filterOutMatchPlayers(val[0], val[1]));
+  }
+
+  private filterOutMatchPlayers(match: Match, profiles: Profile[]): Match {
+    match.players = match.players.filter(pl => profiles.map(pr => pr.account_id).indexOf(pl.account_id) >= 0);
+    match.players.forEach(pl => pl.avatar = (profiles.find(pr => pr.account_id == pl.account_id) as Profile).avatarfull);
+    return match;
   }
 }

@@ -2,7 +2,7 @@
 
 import Axios from 'axios';
 import Bottleneck from 'bottleneck';
-import { Player, RecentMatch, Match } from './opendota-types';
+import { Player, RecentMatch, Match } from '../model/opendota-types';
 import { format } from 'util';
 import { Observable } from 'rxjs';
 
@@ -29,7 +29,6 @@ export default class OpenDota {
   }
 
   private static request<T>(url: string) : Observable<T> {
-    console.log('api call %s', url);
     return Observable.fromPromise(limiter.schedule(() => Axios.get<T>(url))).map(response => response.data);
   }
 }
