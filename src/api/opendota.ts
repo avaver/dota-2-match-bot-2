@@ -1,11 +1,15 @@
 'use strict';
 
+import * as log from 'log4js';
 import Axios from 'axios';
 import Bottleneck from 'bottleneck';
 import { Player, RecentMatch, Match } from '../model/opendota-types';
 import { format } from 'util';
 import { Observable } from 'rxjs';
 
+const logger = log.getLogger('opendota');
+
+logger.info('initializing request limiter');
 const limiter: Bottleneck = new Bottleneck({
   maxConcurrent: 1,
   minTime: 400
@@ -29,6 +33,6 @@ export default class OpenDota {
   }
 
   private static request<T>(url: string) : Observable<T> {
-    return Observable.fromPromise(limiter.schedule(() => Axios.get<T>(url))).map(response => response.data);
+    return Observable.fromPromise(limiter.schedule(() => { logger.trace('api call %s', url); return Axios.get<T>(url); })).map(response => response.data);
   }
 }

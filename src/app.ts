@@ -1,19 +1,26 @@
 'use strict';
 
+import * as log from 'log4js';
+const logger = log.getLogger();
+log.configure({
+  appenders: { out: { type: 'stdout' } },
+  categories: { default: { appenders: ['out'], level: 'debug' } }
+});
+
 import MatchMonitorService from './services/match-monitor-service';
 import DiscordMessageService from './services/discord-message-service';
 import DiscordWebhook from './api/discord-webhook';
-import { Match, MatchPlayer, HEROES, Hero, Profile } from './model/opendota-types';
-import { format } from 'util';
-import AccountService from './services/accounts-service';
-import { Observable } from 'rxjs';
-import Firebase from './api/firebase';
-import OpenDota from './api/opendota';
+import BotService from './services/bot-service';
 
+const botService = new BotService();
 const monitorService = new MatchMonitorService();
 const messageService = new DiscordMessageService();
 
-let x = monitorService.getMatchStream()
+logger.info('application started');
+
+botService.run();
+
+monitorService.getMatchStream()
   .map(match => messageService.getMatchSummaryMessage(match))
   .subscribe(DiscordWebhook.post);
 

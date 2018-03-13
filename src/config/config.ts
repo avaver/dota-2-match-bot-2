@@ -1,6 +1,8 @@
 export const DISCORD_WEBHOOK_URL = "https://discordapp.com/api/webhooks/419418050492891139/KvpWhpvKxPyChUn4uKaDUmO0U77b7kHswsSrjo0kA7dBS_HikuMjmAH-0y0GpK_6uVup";
 //"https://discordapp.com/api/webhooks/409290117245698063/tX_YnYIwN7FYIaz8G-wRIc3R1Ya-ZQtuPhsi9AZ9c3Po-010reRclI4xII80rdN4SfGj";
 
+export const DISCORD_API_KEY = "NDEwNDk4OTk0NzU0ODEzOTcz.DYnYYA.c9Ecn14tDL6f9z-rMWWR9tvYka4";
+
 export const FIREBASE_DB_URL = "https://dota-match-bot.firebaseio.com";
 
 export const FIREBASE_CERT: any = {

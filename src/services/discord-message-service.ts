@@ -21,6 +21,8 @@ export default class DiscordMessageService {
       String.fromCharCode(8203)
     );
 
+    const url = format('https://www.dotabuff.com/matches/%s', match.match_id);
+
     const embeds = match.players.map(player => {
       const hero = HEROES.find(h => h.id == player.hero_id) as Hero;
       const fields: Field[] = [];
@@ -34,7 +36,7 @@ export default class DiscordMessageService {
         format('%s / %s /%s', player.kills, player.deaths, player.assists),
         '___',
         win ? 0xb1e85e : 0xe8635f,
-        undefined,
+        url,
         new Thumbnail(format('https://api.opendota.com/apps/dota2/images/heroes/%s_full.png', hero.name)),
         new Author(player.personaname, 'https://www.dotabuff.com/players/' + player.account_id, player.avatar),
         new Date(match.start_time * 1000).toISOString(),
@@ -43,7 +45,6 @@ export default class DiscordMessageService {
       );
     });
 
-    const url = format('https://www.dotabuff.com/matches/%s', match.match_id);    
     return new Message(embeds, content, win ? 'ПЕРЕМОГА!' : 'ПОРАЗКА');
   }
 

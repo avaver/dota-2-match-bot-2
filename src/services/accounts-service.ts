@@ -1,6 +1,6 @@
 'use strict';
 
-import { Observable, Subject, BehaviorSubject } from 'rxjs';
+import { Observable, BehaviorSubject } from 'rxjs';
 import Firebase from '../api/firebase';
 import PlayerProfileService from './player-profile-service';
 import { Profile } from '../model/opendota-types';
