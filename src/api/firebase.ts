@@ -44,7 +44,6 @@ export default class Firebase {
   }
 
   public addAccount(id: number): void {
-    logger.info('add account %s to firebase', id);
     api.database().ref('accounts').once('value').then(snapshot => {
       let accounts = snapshot.val() as number[];
       if (!accounts) {
@@ -64,7 +63,6 @@ export default class Firebase {
   }
 
   public removeAccount(id: number): void {
-    logger.info('remove account %s to firebase', id);
     api.database().ref('accounts').once('value').then(snapshot => {
       let accounts = snapshot.val() as number[];
       if (accounts) {
@@ -76,5 +74,9 @@ export default class Firebase {
         }
       }
     });
+  }
+
+  public getAccounts(): Promise<number[]> {
+    return api.database().ref('accounts').once('value').then(snapshot => snapshot.val() as number[]);
   }
 }

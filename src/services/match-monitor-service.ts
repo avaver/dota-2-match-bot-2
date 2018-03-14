@@ -4,7 +4,7 @@ import * as log from 'log4js';
 import OpenDota from '../api/opendota';
 import { Match, Profile } from '../model/opendota-types';
 import { Observable } from 'rxjs';
-import AccountService from './accounts-service';
+import AccountService from './account-service';
 
 const logger = log.getLogger('match-monitor');
 

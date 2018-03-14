@@ -7,20 +7,16 @@ import { format } from 'util';
 export default class DiscordMessageService {
   public getMatchSummaryMessage(match: Match): Message {
     const win = this.isWin(match);
-    let content = format('%s %s матч за сили %s тривалістю %s',
+
+    let content = format('```%s %s матч за сили %s\nРахунок: %s - %s\nТривалість: %s```',
       match.players.reduce(this.combinePlayerNames, ''), 
       this.getWinLossWord(match), 
       match.players[0].player_slot >= 128 ? 'темряви' : 'світла',
-      this.getGameDurationPhrase(match.duration)
-    );
-
-    content += format('\n\nЗагальний рахунок `%s - %s` на користь %s\n%s',
       match.radiant_score,
       match.dire_score,
-      match.radiant_score > match.dire_score ? 'світла' : 'темряви',
-      String.fromCharCode(8203)
+      this.getGameDurationPhrase(match.duration)
     );
-
+   
     const url = format('https://www.dotabuff.com/matches/%s', match.match_id);
 
     const embeds = match.players.map(player => {
@@ -45,16 +41,16 @@ export default class DiscordMessageService {
       );
     });
 
-    return new Message(embeds, content, win ? 'ПЕРЕМОГА!' : 'ПОРАЗКА');
+    return new Message(embeds, content, match.match_id.toString());
   }
 
   private combinePlayerNames(accumulator: string, current: MatchPlayer, index: number, array: MatchPlayer[]): string {
     if (index == 0) {
-      return '`' + current.personaname + '`';
+      return current.personaname;
     } else if (array.length - 1 == index) {
-      return accumulator + ' і ' + '`' + current.personaname + '`';
+      return accumulator + ' і ' + current.personaname;
     } else {
-      return accumulator + ', ' + '`' + current.personaname + '`';
+      return accumulator + ', ' + current.personaname;
     }
   }
 
@@ -65,7 +61,7 @@ export default class DiscordMessageService {
   
   private getGameDurationPhrase(duration: number): string {
     let minutes = Math.round(duration / 60);
-    let phrase = '`' + minutes.toString() + '`' + ' хвилин';
+    let phrase = minutes.toString() + ' хвилин';
     if (minutes % 10 == 1) {
       phrase += 'у';
     } else if (minutes % 10 > 1 && minutes % 10 < 5) {
