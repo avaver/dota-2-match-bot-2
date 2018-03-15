@@ -1,18 +1,18 @@
 'use strict';
 
 import { Observable, BehaviorSubject } from 'rxjs';
-import Firebase from '../api/firebase';
-import PlayerProfileService from './player-profile-service';
+import { Firebase } from '../api/firebase';
+import { ProfileService } from './profile-service';
 import { Profile } from '../model/opendota-types';
 
-export default class AccountService {
-  private firebase = new Firebase();
-  private profileService = new PlayerProfileService();
-  public accounts = new BehaviorSubject<Profile[]>([]);
+export namespace AccountService {
+  const accounts = new BehaviorSubject<Profile[]>([]);
 
-  constructor() {
-    this.firebase.startMonitoring<number[]>('accounts')
-    .flatMap(ids => Observable.forkJoin(ids.map(id => this.profileService.getProfile(id))))
-    .subscribe(this.accounts);
+  Firebase.startMonitoring<number[]>('accounts')
+    .flatMap(ids => Observable.forkJoin(ids.map(id => ProfileService.getProfile(id))))
+    .subscribe(accounts);
+
+  export function getAccounts(): Observable<Profile[]> {
+    return accounts;
   }
 }

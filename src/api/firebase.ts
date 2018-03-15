@@ -2,7 +2,7 @@
 
 import * as log from 'log4js';
 import * as api from 'firebase-admin';
-import { FIREBASE_DB_URL, FIREBASE_CERT } from '../config/config';
+import { FIREBASE_DB_URL, FIREBASE_CERT } from '../config/secure-config';
 import { Observable, Subject } from 'rxjs';
 
 const logger = log.getLogger('firebase');
@@ -13,15 +13,15 @@ api.initializeApp({
   databaseURL: FIREBASE_DB_URL
 });
 
-export default class Firebase {
-  private static subjects = new Map<string, Subject<any>>();
+export namespace Firebase {
+  const subjects = new Map<string, Subject<any>>();
   
-  public startMonitoring<T>(path: string): Observable<T> {
-    let subject = Firebase.subjects.get(path) as Subject<T>;
+  export function startMonitoring<T>(path: string): Observable<T> {
+    let subject = subjects.get(path) as Subject<T>;
     if (!subject) {
       logger.info('start monitoring firebase path "%s"', path);
       subject = new Subject<T>();
-      Firebase.subjects.set(path, subject);
+      subjects.set(path, subject);
 
       api.database().ref(path).on('value', snapshot => {
         if (snapshot) {
@@ -37,13 +37,13 @@ export default class Firebase {
     return subject;
   }
 
-  public stopMonitoring(path: string): void {
+  export function stopMonitoring(path: string): void {
     logger.info('stop monitoring firebase path "%s"', path);
     api.database().ref(path).off('value');
-    Firebase.subjects.delete(path);
+    subjects.delete(path);
   }
 
-  public addAccount(id: number): void {
+  export function addAccount(id: number): void {
     api.database().ref('accounts').once('value').then(snapshot => {
       let accounts = snapshot.val() as number[];
       if (!accounts) {
@@ -62,7 +62,7 @@ export default class Firebase {
     });
   }
 
-  public removeAccount(id: number): void {
+  export function removeAccount(id: number): void {
     api.database().ref('accounts').once('value').then(snapshot => {
       let accounts = snapshot.val() as number[];
       if (accounts) {
@@ -76,7 +76,7 @@ export default class Firebase {
     });
   }
 
-  public getAccounts(): Promise<number[]> {
+  export function getAccounts(): Promise<number[]> {
     return api.database().ref('accounts').once('value').then(snapshot => snapshot.val() as number[]);
   }
 }

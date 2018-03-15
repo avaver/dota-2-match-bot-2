@@ -1,10 +1,10 @@
 'use strict';
 
 import { Message, Embed, Author, Thumbnail, Field, Footer } from '../model/discord-types';
-import { Match, MatchPlayer, HEROES, Hero } from '../model/opendota-types';
+import { Match, MatchPlayer, Hero, Profile } from '../model/opendota-types';
 import { format } from 'util';
 
-export default class DiscordMessageService {
+export default class MessageService {
   public getMatchSummaryMessage(match: Match): Message {
     const win = this.isWin(match);
 
@@ -20,8 +20,10 @@ export default class DiscordMessageService {
     const url = format('https://www.dotabuff.com/matches/%s', match.match_id);
 
     const embeds = match.players.map(player => {
-      const hero = HEROES.find(h => h.id == player.hero_id) as Hero;
       const fields: Field[] = [];
+      const hero = player.hero as Hero;
+      const profile = player.profile as Profile;
+
       fields.push(new Field('Last hits/Denies', format('%s/%s', player.last_hits, player.denies), true));
       fields.push(new Field('Networth', this.numberToText(player.total_gold), true));
       fields.push(new Field('GPM', player.gold_per_min.toString(), true));
@@ -33,11 +35,11 @@ export default class DiscordMessageService {
         '___',
         win ? 0xb1e85e : 0xe8635f,
         url,
-        new Thumbnail(format('https://api.opendota.com/apps/dota2/images/heroes/%s_full.png', hero.name)),
-        new Author(player.personaname, 'https://www.dotabuff.com/players/' + player.account_id, player.avatar),
+        new Thumbnail(this.getHeroIconUrl(hero)),
+        new Author(player.personaname, 'https://www.dotabuff.com/players/' + player.account_id, profile.avatarfull),
         new Date(match.start_time * 1000).toISOString(),
         fields,
-        new Footer(hero.localized_name, format('https://api.opendota.com/apps/dota2/images/heroes/%s_full.png', hero.name))
+        new Footer(hero.localized_name, this.getHeroIconUrl(hero))
       );
     });
 
@@ -76,5 +78,9 @@ export default class DiscordMessageService {
 
   private isWin(match: Match): boolean {
     return match.players[0].player_slot >= 128 != match.radiant_win;
+  }
+
+  private getHeroIconUrl(hero: Hero): string {
+    return format('https://api.opendota.com/apps/dota2/images/heroes/%s_full.png', hero.name.replace('npc_dota_hero_', ''))
   }
 }
