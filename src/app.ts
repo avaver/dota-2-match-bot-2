@@ -19,6 +19,6 @@ botService.run();
 
 MatchService.getMatchStream()
   .map(match => messageService.getMatchSummaryMessage(match))
-  .subscribe(DiscordWebhook.post);
+  .subscribe(DiscordWebhook.post, logger.error);
 
 logger.info('application started');
