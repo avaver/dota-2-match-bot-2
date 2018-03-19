@@ -1,11 +1,15 @@
 'use strict';
 
 import * as log from 'log4js';
-const logger = log.getLogger();
+
+const logLayout = process.env['HEROKU'] ? 
+  { type: 'pattern', pattern: '%[[%p] %c - %m%]' } : 
+  { type: 'colored' };
 log.configure({
-  appenders: { out: { type: 'stdout' } },
+  appenders: { out: { type: 'stdout', layout: logLayout } },
   categories: { default: { appenders: ['out'], level: 'debug' } }
 });
+const logger = log.getLogger();
 
 import { MatchService } from './services/match-service';
 import MessageService from './services/message-service';

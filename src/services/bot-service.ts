@@ -14,15 +14,16 @@ import SwearCommand from './bot-commands/swear-command';
 import NaviProcessor from './bot-commands/navi-processor';
 import MmrCommand from './bot-commands/mmr-command';
 import ShitcannonCommand from './bot-commands/shitcannont-command';
+import { format } from 'util';
 
 const logger = log.getLogger('bot-service');
 
-export default class BotService {
+export default class BotService implements Processor {
   private client = new Client();
   private processors = new Map<string, Processor>();
   private analyzers = new Array<Processor>();
 
-  constructor() {
+  public run(): void {
     this.processors.set('bibametr', new BibametrCommand());
     this.processors.set('watchlist', new WatchlistCommand());
     this.processors.set('register', new RegisterCommand());
@@ -31,15 +32,13 @@ export default class BotService {
     this.processors.set('shitcannon', new ShitcannonCommand());
     this.processors.set('mmr', new MmrCommand());
     this.processors.set('clear', new ClearCommand());
-    this.processors.set('default', new DefaultCommand());
+    this.processors.set('commands', this);
 
     this.analyzers.push(new NaviProcessor());
 
     this.client.on('ready', () => this.onReady());
     this.client.on('message', message => this.onMessage(message));
-  }
-
-  public run(): void {
+    
     this.client.login(DISCORD_API_KEY);
   }
 
@@ -48,21 +47,23 @@ export default class BotService {
   }
 
   private onMessage(message: Message): void {
-    let processor = this.getProcessor(this.getCommand(message.content));
-    if (processor) {
-      processor.process(message);
+    if (message.channel.type == 'text' && !message.author.bot) {
+      let command = this.getCommand(message.content);
+      if (command) {
+        this.getProcessor(command).process(message);
+      }
+      this.analyzers.forEach(analyzer => analyzer.process(message));
     }
-
-    this.analyzers.forEach(analyzer => analyzer.process(message));
   }
 
-  private getProcessor(command: string | undefined): Processor | undefined {
-    if (command) {
-      let processor = this.processors.get(command);
-      return processor ? processor : this.processors.get('default');
-    }
+  process(message: Message): void {
+    let commands = [...this.processors].map(p => '!' + p[0]).sort().join('\n');
+    message.channel.send(format('```diff\n%s\n```', commands));
+  }
 
-    return undefined;
+  private getProcessor(command: string ): Processor {
+    let processor = this.processors.get(command);
+    return processor ? processor : new DefaultCommand();
   }
 
   private getCommand(content: string): string | undefined {

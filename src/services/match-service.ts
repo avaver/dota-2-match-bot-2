@@ -41,7 +41,7 @@ export namespace MatchService {
     const matchEndTime = (match.start_time + match.duration) * 1000;
     const isRecent = Date.now() - matchEndTime < MATCH_RECENT_THRESHOLD_MS;
     if (!isRecent) {
-      logger.debug('skipping match %s as too old (finished on %s)', 
+      logger.info('skipping match %s as too old (finished on %s)', 
         match.match_id, 
         new Date(matchEndTime).toISOString());
     }
