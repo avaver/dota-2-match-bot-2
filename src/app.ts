@@ -3,7 +3,7 @@
 import * as log from 'log4js';
 
 const logLayout = process.env['HEROKU'] ? 
-  { type: 'pattern', pattern: '%[[%p] %c - %m%]' } : 
+  { type: 'pattern', pattern: '[%p] %c - %m' } : 
   { type: 'colored' };
 log.configure({
   appenders: { out: { type: 'stdout', layout: logLayout } },
