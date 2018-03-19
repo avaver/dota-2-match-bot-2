@@ -13,7 +13,7 @@ export namespace MatchService {
 
   export function getMatchStream(): Observable<Match> {
     return Observable.interval(MATCH_POLL_INTERVAL_MS)
-      .withLatestFrom(AccountService.getAccounts()).map(val => { logger.debug('checking for matches'); return val[1]; })
+      .withLatestFrom(AccountService.getAccounts()).map(val => { logger.trace('checking for matches'); return val[1]; })
       .switchMap(accs => accs.map(a => OpenDota.getLastMatchForPlayer(a.account_id))).mergeAll().distinct(m => m.match_id)
       .filter(m => recentMatch(m))
       .flatMap(m => OpenDota.getMatchDetails(m.match_id))
