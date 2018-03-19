@@ -12,6 +12,8 @@ import RegisterCommand from './bot-commands/register-command';
 import UnregisterCommand from './bot-commands/unregister-command';
 import SwearCommand from './bot-commands/swear-command';
 import NaviProcessor from './bot-commands/navi-processor';
+import MmrCommand from './bot-commands/mmr-command';
+import ShitcannonCommand from './bot-commands/shitcannont-command';
 
 const logger = log.getLogger('bot-service');
 
@@ -26,6 +28,8 @@ export default class BotService {
     this.processors.set('register', new RegisterCommand());
     this.processors.set('unregister', new UnregisterCommand());
     this.processors.set('фас', new SwearCommand());
+    this.processors.set('shitcannon', new ShitcannonCommand());
+    this.processors.set('mmr', new MmrCommand());
     this.processors.set('clear', new ClearCommand());
     this.processors.set('default', new DefaultCommand());
 

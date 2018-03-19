@@ -22,6 +22,10 @@ export abstract class CommandBase implements Processor {
   protected random(min: number, max: number) {
     return Math.floor(Math.random() * (max - min)) + min;
   }
+
+  protected randomItem<T>(items: ArrayLike<T>): T {
+    return items[this.random(0, items.length)];
+  }
 }
 
 export interface Processor {

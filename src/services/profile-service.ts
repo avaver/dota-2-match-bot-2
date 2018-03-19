@@ -12,13 +12,13 @@ export namespace ProfileService {
   const profileCache = new Map<number, CacheItem<Profile>>();
 
   export function getProfile(accountId: number): Observable<Profile> {
-    logger.debug('loading profile for account %s', accountId);
     let cachedProfile = profileCache.get(accountId);
 
     if (cachedProfile && cachedProfile.added > Date.now() - CACHE_EXP_PROFILE_MS) {
       logger.debug('using cached profile for account %s', accountId);
       return Observable.of(cachedProfile.item);
     } else { 
+      logger.trace('loading profile for account %s', accountId);
       let profileObservable = OpenDota.getPlayer(accountId).map(p => p.profile);
       profileObservable.subscribe(profile => profileCache.set(accountId, new CacheItem(profile, Date.now())));
       return profileObservable;
