@@ -23,6 +23,7 @@
   "devDependencies": {
     "@reactivex/rxjs": "^5.5.6",
     "@types/node": "^9.4.6",
+    "@types/raven": "^2.1.6",
     "nodemon": "^1.17.1",
     "ts-node": "^5.0.0",
     "typescript": "^2.7.2"
@@ -33,6 +34,7 @@
     "discord.js": "^11.3.2",
     "firebase-admin": "^5.9.1",
     "log4js": "^2.5.3",
+    "raven": "^2.4.2",
     "rxjs": "^5.5.6"
   }
 }
