@@ -7,7 +7,6 @@ import { BIBA_MIN_SIZE, BIBA_MAX_SIZE, BIBA_BOSS_MIN_SIZE } from '../../config/c
 
 export default class BibametrCommand extends CommandBase {
   public process(message: Message) {
-    super.process(message);
     let x = this.random(this.isBoss(message) ? BIBA_BOSS_MIN_SIZE : BIBA_MIN_SIZE, BIBA_MAX_SIZE);
     message.channel.send(format('```cs\n%s, в тебе біба %s см\n```', message.author.username, x));
   }

@@ -13,6 +13,11 @@ api.initializeApp({
   databaseURL: FIREBASE_DB_URL
 });
 
+const db = api.firestore();
+db.collection('accounts').get().then(s => {
+  console.log(s.docs.map(d => d.data()));
+});
+
 export namespace Firebase {
   const subjects = new Map<string, Subject<any>>();
   

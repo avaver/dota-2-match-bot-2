@@ -6,7 +6,6 @@ import { Message } from 'discord.js';
 export default class ClearCommand extends CommandBase {
 
   public process(message: Message) {
-    super.process(message);
     if (!this.isBoss(message)) {
       message.channel.send('```cs\n#у тебе немає прав на цю команду\n```');
     } else {

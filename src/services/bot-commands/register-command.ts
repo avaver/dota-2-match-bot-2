@@ -8,7 +8,6 @@ import { format } from 'util';
 
 export default class RegisterCommand extends CommandBase {
   public process(message: Message) {
-    super.process(message);
     let args = this.getArgs(message.content);
     let id = parseInt(args[0].trim());
     if (args.length > 0 && id) {

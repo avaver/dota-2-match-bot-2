@@ -7,8 +7,7 @@ import { SWEARS } from '../../config/config';
 
 export default class ShitcannonCommand extends CommandBase {
   public process(message: Message) {
-    super.process(message);
-    let realUsers = message.guild.members.map(m => m.user).filter(u => !u.bot);
+    let realUsers = message.guild.members.map(m => m.user).filter(u => !u.bot && u.presence.status != 'offline');
     let randomUser = this.randomItem(realUsers);
 
     message.channel.send(format(SWEARS[this.random(0, SWEARS.length)], randomUser))

@@ -1,7 +1,7 @@
 'use strict';
 
 import * as log from 'log4js';
-import { Client, Message } from 'discord.js';
+import { Client, Message, TextChannel } from 'discord.js';
 import { DISCORD_API_KEY } from '../config/secure-config';
 import { Processor } from './bot-commands/command';
 import BibametrCommand from './bot-commands/bibametr-command';
@@ -13,26 +13,30 @@ import UnregisterCommand from './bot-commands/unregister-command';
 import SwearCommand from './bot-commands/swear-command';
 import NaviProcessor from './bot-commands/navi-processor';
 import MmrCommand from './bot-commands/mmr-command';
-import ShitcannonCommand from './bot-commands/shitcannont-command';
+import ShitcannonCommand from './bot-commands/shitcannon-command';
 import { format } from 'util';
 
-const logger = log.getLogger('bot-service');
-
-export default class BotService implements Processor {
+export default class BotService {
+  private logger = log.getLogger('bot-service');
   private client = new Client();
-  private processors = new Map<string, Processor>();
   private analyzers = new Array<Processor>();
 
+  private processors2: Map<string, new() => Processor> = new Map([
+    ['bibametr', BibametrCommand],
+    ['watchlist', WatchlistCommand],
+    ['register', RegisterCommand],
+    ['unregister', UnregisterCommand],
+    ['фас', SwearCommand],
+    ['shitcannon', ShitcannonCommand],
+    ['mmr', MmrCommand],
+    ['clear', ClearCommand]
+  ]);
+
+  private createProcessor<T extends Processor>(type: new() => T): T {
+    return new (type)();
+  }
+
   public run(): void {
-    this.processors.set('bibametr', new BibametrCommand());
-    this.processors.set('watchlist', new WatchlistCommand());
-    this.processors.set('register', new RegisterCommand());
-    this.processors.set('unregister', new UnregisterCommand());
-    this.processors.set('фас', new SwearCommand());
-    this.processors.set('shitcannon', new ShitcannonCommand());
-    this.processors.set('mmr', new MmrCommand());
-    this.processors.set('clear', new ClearCommand());
-    this.processors.set('commands', this);
 
     this.analyzers.push(new NaviProcessor());
 
@@ -43,27 +47,25 @@ export default class BotService implements Processor {
   }
 
   private onReady(): void {
-    logger.info("connected to the discord server");
+    this.logger.info("connected to the discord server");
   }
 
   private onMessage(message: Message): void {
-    if (message.channel.type == 'text' && !message.author.bot) {
+    const channel = message.channel as TextChannel;
+    if (channel && !message.author.bot) {
       let command = this.getCommand(message.content);
       if (command) {
-        this.getProcessor(command).process(message);
+        this.logger.info('processing bot command %s, sent by %s in %s|%s', this.getCommand(message.content), message.author.username, message.guild.name, channel.name);
+        if (command === 'commands') {
+          let commands = [...this.processors2].map(p => '!' + p[0]).sort().join('\n');
+          message.channel.send(format('```diff\n%s\n```', commands));
+        } else {
+          let processorType = this.processors2.get(command) || DefaultCommand;
+          this.createProcessor(processorType).process(message);
+        }
       }
       this.analyzers.forEach(analyzer => analyzer.process(message));
     }
-  }
-
-  process(message: Message): void {
-    let commands = [...this.processors].map(p => '!' + p[0]).sort().join('\n');
-    message.channel.send(format('```diff\n%s\n```', commands));
-  }
-
-  private getProcessor(command: string ): Processor {
-    let processor = this.processors.get(command);
-    return processor ? processor : new DefaultCommand();
   }
 
   private getCommand(content: string): string | undefined {
