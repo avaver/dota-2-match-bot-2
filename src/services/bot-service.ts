@@ -15,6 +15,9 @@ import NaviProcessor from './bot-commands/navi-processor';
 import MmrCommand from './bot-commands/mmr-command';
 import ShitcannonCommand from './bot-commands/shitcannon-command';
 import { format } from 'util';
+import RegisterCommand2 from './bot-commands/z-register-command';
+import WatchlistCommand2 from './bot-commands/z-watchlist-command';
+import UnregisterCommand2 from './bot-commands/z-unregister-command';
 
 export default class BotService implements Processor {
   private logger = log.getLogger('bot-service');
@@ -29,9 +32,12 @@ export default class BotService implements Processor {
     this.processors.set('commands', this);
     this.processors.set('mmr', new MmrCommand());
     this.processors.set('register', new RegisterCommand());
+    this.processors.set('register2', new RegisterCommand2());
     this.processors.set('shitcannon', new ShitcannonCommand());
     this.processors.set('unregister', new UnregisterCommand());
+    this.processors.set('unregister2', new UnregisterCommand2());
     this.processors.set('watchlist', new WatchlistCommand());
+    this.processors.set('watchlist2', new WatchlistCommand2());
     this.processors.set('фас', new SwearCommand());
     this.analyzers.push(new NaviProcessor());
 
@@ -50,7 +56,7 @@ export default class BotService implements Processor {
     if (channel && !message.author.bot) {
       let command = this.getCommand(message.content);
       if (command) {
-        this.logger.info('processing bot command %s, sent by %s in %s|%s', this.getCommand(message.content), message.author.username, message.guild.name, channel.name);
+        this.logger.info('processing bot command %s, sent by %s in %s|%s', command, message.author.username, message.guild.name, channel.name);
         let processor = this.processors.get(command) || new DefaultCommand();
         processor.process(message);
       }
