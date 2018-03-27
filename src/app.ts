@@ -20,7 +20,7 @@ function configureLogger(): void {
     { type: 'colored' };
   log.configure({
     appenders: { out: { type: 'stdout', layout: logLayout } },
-    categories: { default: { appenders: ['out'], level: 'debug' } }
+    categories: { default: { appenders: ['out'], level: 'trace' } }
   });
 }
 

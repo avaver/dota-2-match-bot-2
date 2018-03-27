@@ -1,29 +1,18 @@
 'use strict';
 
 import { Observable, BehaviorSubject } from 'rxjs';
-import { Firebase } from '../api/firebase';
 import { ProfileService } from './profile-service';
-import { Profile } from '../model/opendota-types';
 import { Account } from '../model/matchbot-types';
-import { Firestore } from '../api/firebase-firestore';
+import { DB } from '../api/firebase-db';
 
 export namespace AccountService {
-  const accounts = new BehaviorSubject<Profile[]>([]);
-  const accounts2 = new BehaviorSubject<Account[]>([]);
+  const accounts = new BehaviorSubject<Account[]>([]);
 
-  Firebase.startMonitoring<number[]>('accounts')
-    .flatMap(ids => Observable.forkJoin(ids.map(id => ProfileService.getProfile(id))))
+  DB.startMonitoring()
+    .flatMap(accs => Observable.forkJoin(accs.map(a => ProfileService.getProfile(a.id))), (accs, profs) => accs.map(a => { a.profile = profs.find(p => p.account_id === a.id); return a; }))
     .subscribe(accounts);
 
-  Firestore.startMonitoring()
-    .flatMap(accs => Observable.forkJoin(accs.map(a => ProfileService.getProfile(a.id))), (accs, profs) => accs.map(a => { a.profile = profs.find(p => p.account_id === a.id); return a; }))
-    .subscribe(accounts2);
-
-  export function getAccounts(): Observable<Profile[]> {
+  export function getAccounts(): Observable<Account[]> {
     return accounts;
-  }
-
-  export function getAccounts2(): Observable<Account[]> {
-    return accounts2;
   }
 }

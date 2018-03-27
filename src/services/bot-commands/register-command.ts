@@ -1,10 +1,11 @@
 'use strict';
 
-import { Firebase } from '../../api/firebase';
+import { DB } from '../../api/firebase-db';
 import { ProfileService } from '../profile-service';
 import { CommandBase } from './command';
 import { Message } from 'discord.js';
 import { format } from 'util';
+import { Account } from '../../model/matchbot-types';
 
 export default class RegisterCommand extends CommandBase {
   public process(message: Message) {
@@ -13,10 +14,11 @@ export default class RegisterCommand extends CommandBase {
     if (args.length > 0 && id) {
       ProfileService.getProfile(id).take(1).subscribe(profile => {
         if (profile) {
-          Firebase.addAccount(id);
-          message.channel.send(format('```account %s (%s) registered```', id, profile.personaname));
+          DB.addAccount(new Account(id, message.author.id, message.guild.id, message.channel.id))
+            .then(() => message.channel.send(format('```Аккаунт %s (%s) зареєстровано```', id, profile.personaname)))
+            .catch(e => message.channel.send(format('Помилка: %s', e.message), { code: true }));
         } else {
-          message.channel.send(format('```account %s not found```', id));
+          message.channel.send(format('```Не можу знайти аккаунт %s```', id));
         }
       });
     } else {
