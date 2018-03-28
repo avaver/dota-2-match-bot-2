@@ -26,7 +26,7 @@ function configureLogger(): void {
 
 function handleError(error: any): void {
   logger.error(error); 
-  raven.captureException(error);
+  sentry.captureException(error);
 }
 
 new BotService().run();

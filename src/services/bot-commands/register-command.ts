@@ -12,15 +12,12 @@ export default class RegisterCommand extends CommandBase {
     let args = this.getArgs(message.content);
     let id = parseInt(args[0].trim());
     if (args.length > 0 && id) {
-      ProfileService.getProfile(id).take(1).subscribe(profile => {
-        if (profile) {
-          DB.addAccount(new Account(id, message.author.id, message.guild.id, message.channel.id))
-            .then(() => message.channel.send(format('```Аккаунт %s (%s) зареєстровано```', id, profile.personaname)))
-            .catch(e => message.channel.send(format('Помилка: %s', e.message), { code: true }));
-        } else {
-          message.channel.send(format('```Не можу знайти аккаунт %s```', id));
-        }
-      });
+      ProfileService.getProfile(id)
+        .then(profile => {
+            DB.addAccount(new Account(id, message.author.id, message.guild.id, message.channel.id));
+            message.channel.send(format('```account %s (%s) registered```', id, profile.personaname));
+        })
+        .catch(() => message.channel.send(format('```account %s not found```', id)));
     } else {
       this.logger.warn('incorrect parameters for command %s. expected number, actual: %s', this.getCommand(message.content), message.content);
     }

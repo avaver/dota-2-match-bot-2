@@ -4,8 +4,7 @@ import * as log from 'log4js';
 import Axios from 'axios';
 import Bottleneck from 'bottleneck';
 import { format } from 'util';
-import { Observable } from 'rxjs';
-import { OPENDOTA_MIN_REQUEST_FREQ_MS } from '../config/config';
+import { OPENDOTA_MIN_REQUEST_FREQ_MS, OPENDOTA_MAX_RETRIES } from '../config/config';
 import { Player, RecentMatch, Match, Hero } from '../model/opendota-types';
 
 const logger = log.getLogger('opendota');
@@ -17,27 +16,47 @@ const limiter: Bottleneck = new Bottleneck({
 });
 
 export namespace OpenDota {
-  export function getPlayer(playerId: number): Observable<Player> {
-    return request<Player>(format('https://api.opendota.com/api/players/%s', playerId));
+  const API_URL = 'https://api.opendota.com/api';
+
+  export function getPlayer(playerId: number): Promise<Player> {
+    return requestWithRetry<Player>(format('%s/players/%s', API_URL, playerId));
   }
 
-  export function getRecentMatchesForPlayer(playerId: number, count: number): Observable<RecentMatch[]> {
-    return request<RecentMatch[]>(format('https://api.opendota.com/api/players/%s/matches?limit=%s', playerId, count));
+  export function getRecentMatchesForPlayer(playerId: number, count: number): Promise<RecentMatch[]> {
+    return requestWithRetry<RecentMatch[]>(format('%s/players/%s/matches?limit=%s', API_URL, playerId, count));
   }
 
-  export function getLastMatchForPlayer(playerId: number): Observable<RecentMatch> {
-    return getRecentMatchesForPlayer(playerId, 1).flatMap(matches => Observable.of(matches[0]));
+  export function getLastMatchForPlayer(playerId: number): Promise<RecentMatch> {
+    return getRecentMatchesForPlayer(playerId, 1).then(matches => matches[0]);
   }
 
-  export function getMatchDetails(matchId: number): Observable<Match> {
-    return request<Match>(format('https://api.opendota.com/api/matches/%s', matchId));
+  export function getMatchDetails(matchId: number): Promise<Match> {
+    return requestWithRetry<Match>(format('%s/matches/%s', API_URL, matchId));
   }
 
-  export function getHeroes(): Observable<Hero[]> {
-    return request<Hero[]>('https://api.opendota.com/api/heroes');
+  export function getHeroes(): Promise<Hero[]> {
+    return requestWithRetry<Hero[]>(format('%s/heroes', API_URL));
   }
 
-  function request<T>(url: string) : Observable<T> {
-    return Observable.fromPromise(limiter.schedule(() => { logger.trace('api call %s', url); return Axios.get<T>(url); })).map(response => response.data);
+  function requestWithRetry<T>(url: string, attempt = 1): Promise<T> {
+    return limiter.schedule(() => { 
+      logger.trace('[attempt %s] %s', attempt, url.replace(API_URL, '')); 
+      return Axios.get<T>(url); 
+    })
+    .then(response => response.data)
+    .catch(error => {
+      logger.warn('[attempt %s] %s failed with error: %s', attempt, url.replace(API_URL, ''), error.message); 
+      if (attempt <= OPENDOTA_MAX_RETRIES) { 
+        logger.trace('%s retrying', url.replace(API_URL, ''));
+        return delay(1000 * attempt).then(() => requestWithRetry<T>(url, attempt + 1));
+      } else {
+        logger.error('%s failed, giving up after %s attempts', url.replace(API_URL, ''), attempt - 1);
+        return Promise.reject(error);
+      }
+    });
+  }
+
+  function delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }

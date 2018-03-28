@@ -14,12 +14,15 @@ export namespace MatchService {
 
   export function getMatchStream(): Observable<Match> {
     return Observable.interval(MATCH_POLL_INTERVAL_MS)
-      .withLatestFrom(AccountService.getAccounts()).map(val => { logger.trace('checking for matches'); return val[1]; })
-      .switchMap(accs => accs.map(a => OpenDota.getLastMatchForPlayer(a.id))).mergeAll().distinct(m => m.match_id)
+      .withLatestFrom(AccountService.getAccounts())
+      .map(val => { logger.trace('checking for matches'); return val[1]; })
+      .switchMap(accs => accs.map(a => Observable.fromPromise(OpenDota.getLastMatchForPlayer(a.id)))).mergeAll()
+      .distinct(m => m.match_id)
       .filter(m => recentMatch(m))
       .flatMap(m => OpenDota.getMatchDetails(m.match_id))
       .withLatestFrom(AccountService.getAccounts(), HeroService.getHeroes())
-      .map(val => transformMatch(val[0], val[1], val[2]));
+      .map(val => transformMatch(val[0], val[1], val[2]))
+      .catch((error, source) => { logger.error('Error getting match stream: %s. Trying to recover', error.message); return source; });
   }
 
   function transformMatch(match: Match, accounts: Account[], heroes: Hero[]): Match {

@@ -1,6 +1,7 @@
 'use strict';
 
 export const OPENDOTA_MIN_REQUEST_FREQ_MS = 500;
+export const OPENDOTA_MAX_RETRIES = 3;
 
 export const MATCH_POLL_INTERVAL_MS = 60 * 1000;
 export const MATCH_RECENT_THRESHOLD_MS = 60 * 60 * 1000;
