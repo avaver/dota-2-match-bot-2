@@ -7,6 +7,8 @@ import { Observable } from 'rxjs';
 import { AccountService } from './account-service';
 import { HeroService } from './hero-service';
 import { MATCH_POLL_INTERVAL_MS, MATCH_RECENT_THRESHOLD_MS } from '../config/config';
+import { Firebase } from '../api/firebase';
+import { PublishedService } from './published-service';
 
 export namespace MatchService {
   const logger = log.getLogger('match-service');
@@ -17,7 +19,9 @@ export namespace MatchService {
       .map(val => { logger.trace('checking for matches'); return val[1]; })
       .switchMap(accs => accs.map(a => Observable.fromPromise(OpenDota.getLastMatchForPlayer(a.account_id)))).mergeAll()
       .distinct(m => m.match_id)
-      .filter(m => recentMatch(m))
+      .withLatestFrom(PublishedService.getMatches())
+      .filter(val => recentMatch(val[0], val[1]))
+      .map(val => val[0])
       .flatMap(m => OpenDota.getMatchDetails(m.match_id))
       .withLatestFrom(AccountService.getAccounts(), HeroService.getHeroes())
       .map(val => transformMatch(val[0], val[1], val[2]))
@@ -36,18 +40,24 @@ export namespace MatchService {
       player.hero = heroes.find(hero => hero.id == player.hero_id);
     });
 
-    logger.debug('match %s - players: %s', match.match_id, match.players.map(p => p.personaname).join(', '));
+    // save match as already published
+    Firebase.addPublishedMatch(match.match_id, match.start_time + match.duration);
+
+    logger.info('match %s - players: %s', match.match_id, match.players.map(p => p.personaname).join(', '));
     return match;
   }
 
-  function recentMatch(match: RecentMatch): boolean {
+  function recentMatch(match: RecentMatch, publishedMatches: number[]): boolean {
     const matchEndTime = (match.start_time + match.duration) * 1000;
-    const isRecent = Date.now() - matchEndTime < MATCH_RECENT_THRESHOLD_MS;
-    if (!isRecent) {
-      logger.info('skipping match %s as too old (finished on %s)', 
-        match.match_id, 
-        new Date(matchEndTime).toISOString());
+    let isRecent = true;
+    if (Date.now() - matchEndTime > MATCH_RECENT_THRESHOLD_MS) {
+      logger.info('skipping match %s as too old (finished on %s)', match.match_id, new Date(matchEndTime).toISOString());
+      isRecent = false;
+    } else if (publishedMatches.indexOf(match.match_id) != -1) {
+      logger.info('skipping match %s as already published', match.match_id);
+      isRecent = false;
     }
+
     return isRecent;
   }
 }
