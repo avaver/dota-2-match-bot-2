@@ -3,7 +3,7 @@
 import * as log from 'log4js';
 import * as api from 'firebase-admin';
 import { FIREBASE_DB_URL, FIREBASE_CERT } from '../config/secure-config';
-import { DISCORD_BOSS_ID } from '../config/config';
+import { DISCORD_BOSS_ID, PUBLISHED_MATCH_STORAGE_S } from '../config/config';
 import { Account } from '../model/matchbot-types';
 import { Subject, Observable } from 'rxjs';
 import { format } from 'util';
@@ -17,15 +17,18 @@ const db = api.initializeApp({
 }, '[FIRESTORE]').firestore();
 
 export namespace DB {
-  const COLLECTION_KEY = 'accounts';
-  let subject = new Subject<Account[]>();
-  let unsub: () => void;
+  const ACCOUNTS_KEY = 'accounts';
+  const MATCHES_KEY = 'matches';
+  let subjectAccounts = new Subject<Account[]>();
+  let subjectMatches = new Subject<number[]>();
+  let unsubAccounts: () => void;
+  let unsubMatches: () => void;
   
   export function addAccount(account: Account): Promise<void> {
     return DB.getAccount(account.id)
       .then(() => Promise.reject(format('Аккаунт %s вже зареєстрований', account.id)))
       .catch(() => 
-        db.collection(COLLECTION_KEY).add({
+        db.collection(ACCOUNTS_KEY).add({
           id: account.id,
           addedBy: account.addedBy,
           serverId: account.serverId,
@@ -35,7 +38,7 @@ export namespace DB {
   }
 
   export function removeAccount(id: number, removedBy: string): Promise<void> {
-    return db.collection(COLLECTION_KEY)
+    return db.collection(ACCOUNTS_KEY)
       .where('id', '==', id)
       .get().then(snapshot => {
         if (snapshot.empty) {
@@ -48,27 +51,64 @@ export namespace DB {
   }
 
   export function getAccount(id: number): Promise<Account> {
-    return db.collection(COLLECTION_KEY).where('id', '==', id).get().then(snapshot => snapshot.docs[0].data() as Account);
+    return db.collection(ACCOUNTS_KEY).where('id', '==', id).get().then(snapshot => snapshot.docs[0].data() as Account);
   }
 
-  export function startMonitoring(): Observable<Account[]> {
-    if (!unsub) {
-      unsub = db.collection(COLLECTION_KEY).onSnapshot(snapshot => {
+  export function startMonitoringAccounts(): Observable<Account[]> {
+    if (!unsubAccounts) {
+      unsubAccounts = db.collection(ACCOUNTS_KEY).onSnapshot(snapshot => {
         let accounts = snapshot.docs.map(doc => doc.data() as Account);
         if (accounts && accounts.length > 0) {
-          subject.next(accounts);
+          subjectAccounts.next(accounts);
         }
       });
     }
 
-    return subject;
+    return subjectAccounts;
   }
 
-  export function stopMonitoring(): void {
-    if (unsub) {
-      unsub();
+  export function stopMonitoringAccounts(): void {
+    if (unsubAccounts) {
+      unsubAccounts();
     }
+  }
+
+  export function startMonitoringMatches(): Observable<number[]> {
+    if (!unsubMatches) {
+      unsubMatches = db.collection(MATCHES_KEY).onSnapshot(snapshot => {
+        let matches = snapshot.empty ? [] : snapshot.docs.map(doc => doc.data().id as number);
+        if (matches && matches.length > 0) {
+          subjectMatches.next(matches);
+        }
+      });
+    }
+
+    return subjectMatches;
+  }
+
+  export function stopMonitoringMatches(): void {
+    if (unsubMatches) {
+      unsubMatches();
+    }
+  }
+
+  export function addPublishedMatch(id: number, endTime: number): Promise<void> {
+    logger.trace('saving published match %s finished at %s', id, new Date(endTime * 1000).toISOString());
+    return db.collection(MATCHES_KEY).add({id: id, endTime: endTime}).then(() => cleanupOldPublishedMatches());
+  }
+
+  export function cleanupOldPublishedMatches(): Promise<void> {
+    logger.trace('cleaning up outdated published matches');
+    return db.collection(MATCHES_KEY)
+      .where('endTime', '<=', Math.floor(Date.now() / 1000 - PUBLISHED_MATCH_STORAGE_S))
+      .get()
+      .then(snapshot => snapshot.docs.forEach(d => d.ref.delete()));
+  }
+
+  export function getRecentPublishedMatches(): Promise<number[]> {
+    logger.trace('requesting recently published matches');
+    return db.collection(MATCHES_KEY).get().then(snapshot => snapshot.empty ? [] : snapshot.docs.map(doc => doc.data().id as number));
   }
 }
 
-process.on('SIGTERM', () => { logger.fatal('SIGTERM received.'); DB.stopMonitoring(); });
+process.on('SIGTERM', () => { logger.fatal('SIGTERM received.'); DB.stopMonitoringAccounts(); DB.stopMonitoringMatches(); });

@@ -8,7 +8,7 @@ import { DB } from '../api/firebase-db';
 export namespace AccountService {
   const accounts = new BehaviorSubject<Account[]>([]);
 
-  DB.startMonitoring()
+  DB.startMonitoringAccounts()
     .flatMap(accs => Observable.forkJoin(accs.map(a => ProfileService.getProfile(a.id))), (accs, profs) => accs.map(a => { a.profile = profs.find(p => p.account_id === a.id); return a; }))
     .subscribe(accounts);
 
