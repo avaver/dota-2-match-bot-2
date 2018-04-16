@@ -8,6 +8,6 @@ export class CacheItem<T> {
 
 export class Account {
   public profile?: Profile;
-  public timestamp?: Date
-  constructor(public id: number, public addedBy: string, public serverId: string, public channelId: string) {}
+  public timestamp?: Date;
+  constructor(public id: number, public addedBy: string, public serverId: string, public channelId: string, public lastMatchId = 0) {}
 }
