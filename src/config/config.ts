@@ -4,9 +4,6 @@ export const OPENDOTA_MIN_REQUEST_FREQ_MS = 1000;
 export const OPENDOTA_MAX_RETRIES = 3;
 
 export const MATCH_POLL_INTERVAL_MS = 60 * 1000;
-export const MATCH_RECENT_THRESHOLD_MS = 24 * 60 * 60 * 1000;
-
-export const PUBLISHED_MATCH_STORAGE_S = 7 * 24 * 60 * 60;
 
 export const DISCORD_BOSS_ID = "407971834689093632";
 export const BIBA_MIN_SIZE = 1;
